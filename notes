@@ -1,0 +1,64 @@
+
+
+你好，我是一位資深後端與架構工程師。我正在規劃一個高含金量的分散式微服務 Side Project，目標是解決業界在高並發、多語言環境下的真實痛點。
+
+請擔任「資深雲端架構師」，幫我詳細規劃這個專案的技術藍圖與實作步驟。專案核心設定如下：
+
+1. 業務場景與多語言微服務：
+- 服務 A（Java / Spring Boot）：處理核心商務邏輯與交易資料庫。
+- 服務 B（Go 或 Python）：負責高並發、高密度的資料運算（例如 AI RAG 檢索或大數據過濾）。
+- 通訊協議：兩者拒絕使用傳統的 HTTP/1.1 JSON Restful API，全面改用 gRPC (HTTP/2 + Protobuf) 進行跨語言的高效內網通訊。
+
+2. 部署環境：
+- 全面部署於 Kubernetes (K8s) 叢集內（Pod 級別通訊）。
+
+3. 專案核心挑戰（我想深入研究並踩坑的架構痛點）：
+- 由於 gRPC 走的是 HTTP/2 長連線（Multiplexing），K8s 預設的 Service (kube-proxy L4 負載平衡) 會導致所有請求卡在同一個連線上，造成後端 Pod 嚴重的負載不均（Load Imbalance）。
+- 我希望引入「七層負載平衡（L7 Load Balancing）」或「服務網格（Service Mesh，如 Linkerd 或 Istio）」或「客戶端負載平衡（Client-side LB，如 gRPC headless service / gRPC 内置的 Round-Robin 策略）」來完美解決這個長連線失衡問題。
+
+請幫我產出一份結構清晰、可讀性高的「專案實作指南」，包含以下章節：
+- 【系統架構圖規劃】：說明 Client、gRPC Gateway、K8s L7 元件、服務 A 與服務 B 的流量走向與 TCP 連線狀態。
+- 【.proto 合約設計】：給出一個標準且具備 Streaming（資料流）特性的 Protobuf 範例。
+- 【K8s 部署與踩坑實錄提示】：提供 K8s Deployment 與對應解決 L7 負載不均的 Service/Ingress/Mesh 配置檔範例（YAML 關鍵部分即可）。
+- 【效能驗證指標】：教我如何使用像是 ghz 這種 gRPC 壓測工具，來驗證負載平衡真的有均勻分發到多個 Pod。
+
+請直接開始，跳過冗長的客套話，用專業、 Scannable（好視覺掃描）且條理分明的繁體中文回答。
+
+
+
+
+
+.proto
+在 RESTful 的世界裡，你可能要看 Swagger 或是 Word 文件才知道 API 的欄位名稱。
+在 gRPC 的世界裡，.proto 檔案就是唯一的「真理」與「合約」。
+
+它是一個純文字檔，用來定義兩件事：
+
+    Service（服務）：有哪些 API 可以呼叫？
+
+    Message（訊息）：傳入的參數是什麼？回傳的資料結構是什麼？
+
+你只要寫好這個 .proto 檔案，透過 gRPC 的工具（編譯器 protoc），它就會自動幫你生成 Java 的程式碼（Stub，俗稱存根或客戶端代理）
+
+
+【 grpc-client 】 (Java)
+         │
+         │ 1. 像呼叫本地 Method 一樣：
+         │    orderService.createOrder(request)
+         ▼
+    [ Auto-generated Client Stub ]
+         │
+         │ 2. 底層自動將物件轉成 Protobuf 二進位流
+         │    透過 HTTP/2 連線傳送 (Localhost:9090)
+         ▼
+  ────────────────────────────────────────── (網路傳輸)
+         │
+         ▼
+    [ Auto-generated Server Stub ]
+         │
+         │ 3. 底層自動將二進位流反序列化成 Java 物件
+         ▼
+  【 grpc-server 】 (Java)
+         │
+         └─► 4. 真正執行你的業務邏輯 (例如寫入資料庫)
+
