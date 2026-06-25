@@ -1,0 +1,25 @@
+syntax = "proto3"; // 使用 protobuf 第三版語法
+
+// 這裡設定自動生成 Java 程式碼時的 package 路径
+option java_multiple_files = true;
+option java_package = "com.example.grpc.order";
+option java_outer_classname = "OrderProto";
+
+// 1. 定義服務 (API 門面)
+service OrderService {
+  // 定義一個叫作 GetOrder 的 API，傳入 OrderRequest，回傳 OrderResponse
+  rpc GetOrder (OrderRequest) returns (OrderResponse);
+}
+
+// 2. 定義傳入參數
+message OrderRequest {
+  string order_id = 1; // 注意：後面的 = 1 不是給值，而是這個欄位在二進位編碼中的「編號」
+}
+
+// 3. 定義回傳結果
+message OrderResponse {
+  string order_id = 1;
+  string product_name = 2;
+  double price = 3;
+  string status = 4;
+}
