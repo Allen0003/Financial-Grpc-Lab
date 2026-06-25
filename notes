@@ -28,6 +28,60 @@
 
 
 
+
+
+你好，我是一位 Java 資深後端工程師。我正在規劃一個全 Java (Spring Boot) 環境的 gRPC 分散式架構 Side Project。
+
+因為先前遇到 Maven 網路與第三方 Protobuf 編譯外掛（如 xolstice）在 Mac 本地環境嚴重相容性衝突（滿街紅字），我決定放棄在 Maven 的 <build> 內配置 protobuf-maven-plugin。
+
+我目前的目錄結構已經完全建立好了：
+Financial-Grpc-Lab
+├── pom.xml (根目錄 pom)
+├── grpc-api
+│   ├── pom.xml
+│   └── src
+│       └── main
+│           └── proto
+│               └── order.proto
+├── grpc-client
+│   └── pom.xml
+└── grpc-server
+    └── pom.xml
+
+【我的 order.proto 內容如下】：
+syntax = "proto3";
+option java_multiple_files = true;
+option java_package = "com.example.grpc.order";
+option java_outer_classname = "OrderProto";
+
+service OrderService {
+  rpc GetOrder (OrderRequest) returns (OrderResponse);
+}
+
+message OrderRequest {
+  string order_id = 1;
+}
+
+message OrderResponse {
+  string order_id = 1;
+  string product_name = 2;
+  double price = 3;
+  string status = 4;
+}
+
+【請擔任我的資深雲端架構師，帶領我從零重啟，並遵循以下三個鐵律】：
+
+1. 絕不使用任何第三方 Maven Protobuf 編譯外掛。請直接指導我如何在 Mac 本地端透過 Homebrew 安裝原生 protoc，並提供一條直接在 Terminal 執行就能把 order.proto 完美轉出 Java 程式碼至 grpc-api/src/main/java 下的純指令。
+2. 請給我三個模組（根目錄、grpc-api、grpc-server、grpc-client）最乾淨、沒有變數、100% 只引用標準核心 JAR 包、絕對不會因為下載失敗而噴紅字的完整 pom.xml。
+3. 程式碼生成成功後，請一行一行、不省略地帶我撰寫 grpc-server 的第一個 Java gRPC 服務實作，以及 grpc-client 的呼叫端代碼。
+
+請直接開始，用專業、條理分明且 Scannable 的繁體中文，帶我一步步建立起這個高含金量的專案！
+
+
+
+
+
+
 .proto
 在 RESTful 的世界裡，你可能要看 Swagger 或是 Word 文件才知道 API 的欄位名稱。
 在 gRPC 的世界裡，.proto 檔案就是唯一的「真理」與「合約」。
@@ -61,4 +115,50 @@
   【 grpc-server 】 (Java)
          │
          └─► 4. 真正執行你的業務邏輯 (例如寫入資料庫)
+
+
+
+
+
+protoc 是將 .proto 轉成 code
+mac 環境太舊無法 寫在 pom 裡面 本地安裝
+
+用乾淨沒有第三方的 pom 就不會有下載衝突
+
+然後在docker 裡面 下載 jaegertracing/protobuf:0.5.0 image
+
+然後用docker 做編輯
+
+
+最後下
+
+docker run --rm -v "${PWD}":/workspace -w /workspace jaegertracing/protobuf:0.5.0 \
+    --proto_path=grpc/grpc-api/main/proto \
+    --java_out=grpc/grpc-api/main/java \
+    --plugin=protoc-gen-grpc-java=/usr/bin/protoc-gen-grpc-java \
+    --grpc-java_out=grpc/grpc-api/main/java \
+    grpc/grpc-api/main/proto/order.proto
+
+
+
+-v "${PWD}":/workspace：「空間投影（Volume Mount）」。把你的 Mac 當前路徑（${PWD}，即 Financial-Grpc-Lab 根目錄），對映到容器內部的 /workspace 資料夾。這樣容器內部才能讀寫你 Mac 上的檔案。
+
+
+-w /workspace：「工作目錄（Working Directory）」。設定容器啟動時，預設直接進入 /workspace 目錄下執行指令。
+
+
+
+--plugin=protoc-gen-grpc-java=/usr/bin/protoc-gen-grpc-java \
+
+含意：「載入 gRPC 專用外掛」。
+
+原生的 protoc 編譯器只懂得把 message 轉成 Java Bean，它不懂什麼是 gRPC 服務。因此，這行參數是告訴編譯器：「請載入一個名為 protoc-gen-grpc-java 的外掛，而這個外掛在 Docker 容器內部的絕對路徑是 /usr/bin/protoc-gen-grpc-java。」
+
+
+
+--grpc-java_out=grpc/grpc-api/main/java \
+
+含意：指定 「gRPC 服務類別（Stub）的輸出目的地」。
+
+當上一步的外掛載入後，這個參數才會生效。它會驅動外掛去解析 service OrderService 的定義，並把最關鍵的 OrderServiceGrpc.java（內含 Server 基礎類別與 Client 遠端呼叫 Stub）同樣吐進 grpc/grpc-api/main/java 目錄中。
 
