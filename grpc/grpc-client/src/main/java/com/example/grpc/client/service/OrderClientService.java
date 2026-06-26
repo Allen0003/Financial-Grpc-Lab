@@ -24,7 +24,7 @@ public class OrderClientService {
 
         // 2. 建立一個「阻塞型（同步）」的 Stub，用來呼叫遠端方法
         this.blockingStub = OrderServiceGrpc.newBlockingStub(channel);
-        System.out.println("🔌 【gRPC 客戶端】已成功連線至 localhost:9090");
+        System.out.println("【gRPC 客戶端】已成功連線至 localhost:9090");
     }
 
     public String queryOrder(String orderId) {
