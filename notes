@@ -81,6 +81,18 @@ message OrderResponse {
 
 
 
+*****
+
+
+proto
+
+1. 定義服務 (API 門面)
+2. 定義傳入參數
+3. 定義回傳結果
+
+修改完 proto 之後 還是要在重新 compiler
+
+
 
 .proto
 在 RESTful 的世界裡，你可能要看 Swagger 或是 Word 文件才知道 API 的欄位名稱。
@@ -161,4 +173,19 @@ docker run --rm -v "${PWD}":/workspace -w /workspace jaegertracing/protobuf:0.5.
 含意：指定 「gRPC 服務類別（Stub）的輸出目的地」。
 
 當上一步的外掛載入後，這個參數才會生效。它會驅動外掛去解析 service OrderService 的定義，並把最關鍵的 OrderServiceGrpc.java（內含 Server 基礎類別與 Client 遠端呼叫 Stub）同樣吐進 grpc/grpc-api/main/java 目錄中。
+
+
+
+
+
+Server Streaming RPC （伺服器端串流）。
+
+用 gRPC 做串流 StreamObserver
+
+
+
+卡在要等
+行情推播結束。
+
+才會一次顯示全部
 
