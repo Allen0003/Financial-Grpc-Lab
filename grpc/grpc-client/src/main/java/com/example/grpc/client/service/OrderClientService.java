@@ -16,6 +16,7 @@ public class OrderClientService {
 
     private ManagedChannel channel;
     private OrderServiceGrpc.OrderServiceBlockingStub blockingStub;
+    private OrderServiceGrpc.OrderServiceStub asyncStub;
 
     @PostConstruct
     public void init() {
@@ -26,6 +27,7 @@ public class OrderClientService {
 
         // 2. 建立一個「阻塞型（同步）」的 Stub，用來呼叫遠端方法
         this.blockingStub = OrderServiceGrpc.newBlockingStub(channel);
+        this.asyncStub = OrderServiceGrpc.newStub(channel);
         System.out.println("【gRPC 客戶端】已成功連線至 localhost:9090");
     }
 
@@ -60,7 +62,7 @@ public class OrderClientService {
                 .setSymbol(symbol)
                 .build();
 
-        blockingStub.streamMarketData(request).forEachRemaining(clientResponseObserver::onNext);
+        asyncStub.streamMarketData(request, clientResponseObserver);
     }
 
 }

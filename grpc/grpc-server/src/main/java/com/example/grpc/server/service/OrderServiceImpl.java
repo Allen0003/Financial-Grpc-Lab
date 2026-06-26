@@ -44,7 +44,7 @@ public class OrderServiceImpl extends OrderServiceGrpc.OrderServiceImplBase {
                         .setCurrentPrice(currentPrice)
                         .build();
 
-                // 核心黑魔法：呼叫 onNext 發送這秒的報價，通道不會斷，繼續留著等下一次
+                // 呼叫 onNext 發送這秒的報價，通道不會斷，繼續留著等下一次
                 responseObserver.onNext(response);
                 System.out.println(String.format(" 已推播 [%s] 最新價: %.2f", symbol, currentPrice));
 

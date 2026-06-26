@@ -16,7 +16,6 @@ public class OrderClientController {
 
     private final OrderClientService orderClientService;
 
-
     public OrderClientController(OrderClientService orderClientService) {
         this.orderClientService = orderClientService;
     }
@@ -40,6 +39,7 @@ public class OrderClientController {
                             // 每當 gRPC Server 推來一筆報價，立刻轉手噴給瀏覽器
                             String data = String.format("股票: %s | 即時價: %.2f ",
                                     value.getSymbol(), value.getCurrentPrice(), value.getCurrentPrice());
+
                             emitter.send(SseEmitter.event().data(data));
                         } catch (IOException e) {
                             emitter.completeWithError(e);
