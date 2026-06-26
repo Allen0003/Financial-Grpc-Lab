@@ -1,10 +1,12 @@
 package com.example.grpc.client.service;
 
+import com.example.grpc.order.MarketDataResponse;
 import com.example.grpc.order.OrderRequest;
 import com.example.grpc.order.OrderResponse;
 import com.example.grpc.order.OrderServiceGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.stub.StreamObserver;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Service;
@@ -52,4 +54,13 @@ public class OrderClientService {
             channel.shutdown();
         }
     }
+
+    public void subscribeMarketData(String symbol, StreamObserver<MarketDataResponse> clientResponseObserver) {
+        com.example.grpc.order.MarketDataRequest request = com.example.grpc.order.MarketDataRequest.newBuilder()
+                .setSymbol(symbol)
+                .build();
+
+        blockingStub.streamMarketData(request).forEachRemaining(clientResponseObserver::onNext);
+    }
+
 }
