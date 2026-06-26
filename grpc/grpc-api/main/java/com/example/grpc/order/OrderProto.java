@@ -24,6 +24,16 @@ public final class OrderProto {
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_OrderResponse_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_MarketDataRequest_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_MarketDataRequest_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_MarketDataResponse_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_MarketDataResponse_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -36,10 +46,14 @@ public final class OrderProto {
       "\n\013order.proto\" \n\014OrderRequest\022\020\n\010order_i" +
       "d\030\001 \001(\t\"V\n\rOrderResponse\022\020\n\010order_id\030\001 \001" +
       "(\t\022\024\n\014product_name\030\002 \001(\t\022\r\n\005price\030\003 \001(\001\022" +
-      "\016\n\006status\030\004 \001(\t29\n\014OrderService\022)\n\010GetOr" +
-      "der\022\r.OrderRequest\032\016.OrderResponseB&\n\026co" +
-      "m.example.grpc.orderB\nOrderProtoP\001b\006prot" +
-      "o3"
+      "\016\n\006status\030\004 \001(\t\"#\n\021MarketDataRequest\022\016\n\006" +
+      "symbol\030\001 \001(\t\";\n\022MarketDataResponse\022\016\n\006sy" +
+      "mbol\030\001 \001(\t\022\025\n\rcurrent_price\030\002 \001(\0012x\n\014Ord" +
+      "erService\022)\n\010GetOrder\022\r.OrderRequest\032\016.O" +
+      "rderResponse\022=\n\020StreamMarketData\022\022.Marke" +
+      "tDataRequest\032\023.MarketDataResponse0\001B&\n\026c" +
+      "om.example.grpc.orderB\nOrderProtoP\001b\006pro" +
+      "to3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -57,6 +71,18 @@ public final class OrderProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_OrderResponse_descriptor,
         new java.lang.String[] { "OrderId", "ProductName", "Price", "Status", });
+    internal_static_MarketDataRequest_descriptor =
+      getDescriptor().getMessageTypes().get(2);
+    internal_static_MarketDataRequest_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_MarketDataRequest_descriptor,
+        new java.lang.String[] { "Symbol", });
+    internal_static_MarketDataResponse_descriptor =
+      getDescriptor().getMessageTypes().get(3);
+    internal_static_MarketDataResponse_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_MarketDataResponse_descriptor,
+        new java.lang.String[] { "Symbol", "CurrentPrice", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

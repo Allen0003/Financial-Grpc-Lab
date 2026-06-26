@@ -48,6 +48,37 @@ public final class OrderServiceGrpc {
     return getGetOrderMethod;
   }
 
+  private static volatile io.grpc.MethodDescriptor<com.example.grpc.order.MarketDataRequest,
+      com.example.grpc.order.MarketDataResponse> getStreamMarketDataMethod;
+
+  @io.grpc.stub.annotations.RpcMethod(
+      fullMethodName = SERVICE_NAME + '/' + "StreamMarketData",
+      requestType = com.example.grpc.order.MarketDataRequest.class,
+      responseType = com.example.grpc.order.MarketDataResponse.class,
+      methodType = io.grpc.MethodDescriptor.MethodType.SERVER_STREAMING)
+  public static io.grpc.MethodDescriptor<com.example.grpc.order.MarketDataRequest,
+      com.example.grpc.order.MarketDataResponse> getStreamMarketDataMethod() {
+    io.grpc.MethodDescriptor<com.example.grpc.order.MarketDataRequest, com.example.grpc.order.MarketDataResponse> getStreamMarketDataMethod;
+    if ((getStreamMarketDataMethod = OrderServiceGrpc.getStreamMarketDataMethod) == null) {
+      synchronized (OrderServiceGrpc.class) {
+        if ((getStreamMarketDataMethod = OrderServiceGrpc.getStreamMarketDataMethod) == null) {
+          OrderServiceGrpc.getStreamMarketDataMethod = getStreamMarketDataMethod =
+              io.grpc.MethodDescriptor.<com.example.grpc.order.MarketDataRequest, com.example.grpc.order.MarketDataResponse>newBuilder()
+              .setType(io.grpc.MethodDescriptor.MethodType.SERVER_STREAMING)
+              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "StreamMarketData"))
+              .setSampledToLocalTracing(true)
+              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.example.grpc.order.MarketDataRequest.getDefaultInstance()))
+              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.example.grpc.order.MarketDataResponse.getDefaultInstance()))
+              .setSchemaDescriptor(new OrderServiceMethodDescriptorSupplier("StreamMarketData"))
+              .build();
+        }
+      }
+    }
+    return getStreamMarketDataMethod;
+  }
+
   /**
    * Creates a new async stub that supports all call types for the service
    */
@@ -109,6 +140,13 @@ public final class OrderServiceGrpc {
       io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getGetOrderMethod(), responseObserver);
     }
 
+    /**
+     */
+    public void streamMarketData(com.example.grpc.order.MarketDataRequest request,
+        io.grpc.stub.StreamObserver<com.example.grpc.order.MarketDataResponse> responseObserver) {
+      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getStreamMarketDataMethod(), responseObserver);
+    }
+
     @java.lang.Override public final io.grpc.ServerServiceDefinition bindService() {
       return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
           .addMethod(
@@ -118,6 +156,13 @@ public final class OrderServiceGrpc {
                 com.example.grpc.order.OrderRequest,
                 com.example.grpc.order.OrderResponse>(
                   this, METHODID_GET_ORDER)))
+          .addMethod(
+            getStreamMarketDataMethod(),
+            io.grpc.stub.ServerCalls.asyncServerStreamingCall(
+              new MethodHandlers<
+                com.example.grpc.order.MarketDataRequest,
+                com.example.grpc.order.MarketDataResponse>(
+                  this, METHODID_STREAM_MARKET_DATA)))
           .build();
     }
   }
@@ -149,6 +194,14 @@ public final class OrderServiceGrpc {
       io.grpc.stub.ClientCalls.asyncUnaryCall(
           getChannel().newCall(getGetOrderMethod(), getCallOptions()), request, responseObserver);
     }
+
+    /**
+     */
+    public void streamMarketData(com.example.grpc.order.MarketDataRequest request,
+        io.grpc.stub.StreamObserver<com.example.grpc.order.MarketDataResponse> responseObserver) {
+      io.grpc.stub.ClientCalls.asyncServerStreamingCall(
+          getChannel().newCall(getStreamMarketDataMethod(), getCallOptions()), request, responseObserver);
+    }
   }
 
   /**
@@ -176,6 +229,14 @@ public final class OrderServiceGrpc {
     public com.example.grpc.order.OrderResponse getOrder(com.example.grpc.order.OrderRequest request) {
       return io.grpc.stub.ClientCalls.blockingUnaryCall(
           getChannel(), getGetOrderMethod(), getCallOptions(), request);
+    }
+
+    /**
+     */
+    public java.util.Iterator<com.example.grpc.order.MarketDataResponse> streamMarketData(
+        com.example.grpc.order.MarketDataRequest request) {
+      return io.grpc.stub.ClientCalls.blockingServerStreamingCall(
+          getChannel(), getStreamMarketDataMethod(), getCallOptions(), request);
     }
   }
 
@@ -209,6 +270,7 @@ public final class OrderServiceGrpc {
   }
 
   private static final int METHODID_GET_ORDER = 0;
+  private static final int METHODID_STREAM_MARKET_DATA = 1;
 
   private static final class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -230,6 +292,10 @@ public final class OrderServiceGrpc {
         case METHODID_GET_ORDER:
           serviceImpl.getOrder((com.example.grpc.order.OrderRequest) request,
               (io.grpc.stub.StreamObserver<com.example.grpc.order.OrderResponse>) responseObserver);
+          break;
+        case METHODID_STREAM_MARKET_DATA:
+          serviceImpl.streamMarketData((com.example.grpc.order.MarketDataRequest) request,
+              (io.grpc.stub.StreamObserver<com.example.grpc.order.MarketDataResponse>) responseObserver);
           break;
         default:
           throw new AssertionError();
@@ -293,6 +359,7 @@ public final class OrderServiceGrpc {
           serviceDescriptor = result = io.grpc.ServiceDescriptor.newBuilder(SERVICE_NAME)
               .setSchemaDescriptor(new OrderServiceFileDescriptorSupplier())
               .addMethod(getGetOrderMethod())
+              .addMethod(getStreamMarketDataMethod())
               .build();
         }
       }

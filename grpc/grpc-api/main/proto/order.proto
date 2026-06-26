@@ -9,6 +9,8 @@ option java_outer_classname = "OrderProto";
 service OrderService {
   // 定義一個叫作 GetOrder 的 API，傳入 OrderRequest，回傳 OrderResponse
   rpc GetOrder (OrderRequest) returns (OrderResponse);
+
+  rpc StreamMarketData (MarketDataRequest) returns (stream MarketDataResponse);
 }
 
 // 2. 定義傳入參數
@@ -22,4 +24,13 @@ message OrderResponse {
   string product_name = 2;
   double price = 3;
   string status = 4;
+}
+
+message MarketDataRequest {
+  string symbol = 1; // 例如 "2330"
+}
+
+message MarketDataResponse {
+  string symbol = 1;
+  double current_price = 2; // 當前價格
 }
