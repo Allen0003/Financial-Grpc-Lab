@@ -184,8 +184,15 @@ Server Streaming RPC （伺服器端串流）。
 
 
 
-卡在要等
-行情推播結束。
 
-才會一次顯示全部
+如果用 firefox 應該是 瀏覽器的buffer 卡住 造成要等到 server 全部 print 完, client 才會 一次print
+
+直接使用指令就會 server print 一次 client 也 print 一次
+
+curl -N -H "Accept: text/event-stream" "http://localhost:8080/market/stream?symbol=2330"
+
+
+
+
+
 
