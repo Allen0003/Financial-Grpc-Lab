@@ -1,0 +1,28 @@
+
+/grpc/grpc-api/main/java/com/example/grpc/order/
+
+
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# ==========================================
+# IDE 工具相關排除 (IntelliJ IDEA / Eclipse / VS Code)
+# ==========================================
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.factorypath
+.vscode/
+
+# ==========================================
+# 作業系統產生的垃圾檔案 (Mac / Windows)
+# ==========================================
+.DS_Store
+Thumbs.db
