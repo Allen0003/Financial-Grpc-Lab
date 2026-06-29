@@ -49,7 +49,7 @@ public class OrderServiceImpl extends OrderServiceGrpc.OrderServiceImplBase {
                 System.out.println(String.format(" 已推播 [%s] 最新價: %.2f", symbol, currentPrice));
 
                 // 歇一秒，模擬真實行情跳動間隔
-                Thread.sleep(1000);
+                Thread.sleep(3000);
             }
 
             // 10 次推完了，通知客戶端：「今天盤後共時結束，關閉串流」
@@ -61,5 +61,4 @@ public class OrderServiceImpl extends OrderServiceGrpc.OrderServiceImplBase {
             Thread.currentThread().interrupt();
         }
     }
-
 }

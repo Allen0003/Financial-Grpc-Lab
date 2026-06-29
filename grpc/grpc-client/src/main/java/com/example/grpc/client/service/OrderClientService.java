@@ -64,5 +64,4 @@ public class OrderClientService {
 
         asyncStub.streamMarketData(request, clientResponseObserver);
     }
-
 }
