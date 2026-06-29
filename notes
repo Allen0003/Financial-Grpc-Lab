@@ -196,3 +196,171 @@ curl -N -H "Accept: text/event-stream" "http://localhost:8080/market/stream?symb
 
 
 
+
+--------- 連結 k8s
+
+
+🏗️ 第一章：【系統架構圖規劃】
+
+gRPC 基於 HTTP/2，Client 與 Server 之間只會建立一條永久的 TCP 連線，並在上面並發無數的 Stream。當你的 grpc-client 啟動並連上 K8s Service 時，kube-proxy 隨機把這條 TCP 連線指派給了 grpc-server-pod-1。
+
+災難發生了： 接下來不論進來 10 萬筆訂單還是 100 萬個報價串流，全部都會順著同一條 TCP 連線瘋狂塞進 pod-1，而旁邊的 pod-2、pod-3 只能納涼。這就是 gRPC 負載不均 的底層真相。
+
+為了破這個局，我們將採取最優雅、最不污染程式碼的 L7 客戶端負載平衡（Client-side LB + Headless Service） 方案：
+
+[外部瀏覽器/curl]
+       │ (HTTP / SSE 串流)
+       ▼
+[grpc-client Pod]
+       │
+       ├─► (透過 Headless Service 進行 DNS A 紀錄輪詢，拿到所有 Server Pod IP)
+       │
+       ├─► [TCP 連線 1] ──► [grpc-server Pod 1] (處理 2330 串流)
+       └─► [TCP 連線 2] ──► [grpc-server Pod 2] (處理 2454 串流)
+
+
+📝 第二章：【.proto 合約設計】
+
+我們延用你已經驗證成功的 order.proto。它完美兼顧了商務邏輯（Unary）與高頻交易市場數據（Streaming）。這份合約將成為 Java 服務與未來 Go/Python 服務通訊的唯一標準字典：
+Protocol Buffers
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.example.grpc.order";
+option java_outer_classname = "OrderProto";
+
+service OrderService {
+  // Unary RPC：核心商務邏輯、訂單查詢
+  rpc GetOrder (OrderRequest) returns (OrderResponse);
+
+  // Server Streaming RPC：高頻實時股市報價
+  rpc StreamMarketData (MarketDataRequest) returns (stream MarketDataResponse);
+}
+
+message OrderRequest {
+  string order_id = 1;
+}
+
+message OrderResponse {
+  string order_id = 1;
+  string product_name = 2;
+  double price = 3;
+  string status = 4;
+}
+
+message MarketDataRequest {
+  string symbol = 1; 
+}
+
+message MarketDataResponse {
+  string symbol = 1;
+  double current_price = 2;
+  long timestamp = 3; 
+}
+
+
+🛠️ 第三章：【K8s 部署與踩坑實錄提示】
+
+要在不引入 Istio 等繁重 Service Mesh 的前提下解決 gRPC 的長連線失衡，最經典、逼格最高的玩法就是 Headless Service（無頭服務）。
+
+普通的 K8s Service 有 Cluster IP，會做 L4 轉發（導致失衡）。而 Headless Service 的 clusterIP: None，它不給 IP，而是讓 K8s CoreDNS 直接回傳後端所有 Pod 的實體 IP 列表（A Record）。
+配合 gRPC 內建的 round_robin 負載平衡器，grpc-client 就會在底層主動與「每一個」Server Pod 建立 TCP 連線，並在發送請求時自動輪詢！
+1. Server 端部署與無頭服務 (grpc-server-k8s.yaml)
+YAML
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grpc-server
+  labels:
+    app: grpc-server
+spec:
+  replicas: 3 # 🎯 部署 3 個 Pod 來驗證負載平衡
+  selector:
+    matchLabels:
+      app: grpc-server
+  template:
+    metadata:
+      labels:
+        app: grpc-server
+    spec:
+      containers:
+      - name: grpc-server
+        image: your-docker-registry/grpc-server:latest # 你的 Server 鏡像
+        ports:
+        - containerPort: 9090
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grpc-server-headless # 🎯 這是無頭服務的名字
+spec:
+  clusterIP: None # 🎯 核心踩坑點：必須是 None！讓 DNS 直接吐出 Pod IP 列表
+  selector:
+    app: grpc-server
+  ports:
+  - port: 9090
+    targetPort: 9090
+
+2. Client 端連線代碼調整（踩坑提示）
+
+為了讓 Client 能夠識別 K8s 的 Headless DNS 並啟用 Round-Robin 策略，你需要回頭把你的 OrderClientService.java 中的 init() 連線字串改成這樣：
+Java
+
+@PostConstruct
+public void init() {
+    // 🎯 K8s 終極連線密碼：使用 dns:/// 協議指向 Headless Service 的名字
+    this.channel = ManagedChannelBuilder
+            .forTarget("dns:///grpc-server-headless:9090") 
+            .defaultLoadBalancingPolicy("round_robin") // 🎯 強制開啟客戶端七層輪詢策略
+            .usePlaintext()
+            .build();
+
+    this.blockingStub = OrderServiceGrpc.newBlockingStub(channel);
+    this.asyncStub = OrderServiceGrpc.newStub(channel);
+}
+
+📈 第四章：【效能驗證指標】
+
+把服務塞進 K8s 且擴容到 3 個 Server Pod 後，我們要怎麼跟面試官吹牛說「我真的解決了負載不均」？拿 ghz 砸他！
+
+ghz 是一款專門為 gRPC 設計的黑科技壓測工具（相當於 HTTP 界的 ApacheBench / ab），它支援 Protobuf 連線與串流壓測。
+1. 執行 ghz 壓測指令
+
+你可以透過 Docker 直接在本地或 K8s 叢集內對你的 Client 入口（或直打 Server）發動 2000 個高併發連線：
+Bash
+
+docker run --rm -v "${PWD}":/proto ghzsh/ghz \
+  --insecure \
+  --proto=/proto/order.proto \
+  --call=com.example.grpc.order.OrderService.GetOrder \
+  --data='{"order_id":"TX-2026"}' \
+  --connections=10 \
+  --total=2000 \
+  localhost:9090 # 如果直打 K8s Service 請換成對應的 NodePort/Ingress Address
+
+2. 負載平衡驗證方式（面試大亮點）
+
+在壓測進行的同時，打開你的 Terminal 觀察 3 個 Server Pod 的日誌輸出：
+Bash
+
+kubectl logs -f -l app=grpc-server --max-log-requests=3
+
+    如果架構失敗（沒做 L7 LB）：你會發現只有某一個 Pod 的 Console 在瘋狂噴 收到訂單查詢請求，另外兩個 Pod 靜如止水。
+
+    如果架構成功（Headless + Round-Robin 奏效）：你會看到 3 個 Pod 的 Console 都在均勻地、同步地噴出日誌。高併發請求被完美分流！
+
+
+
+
+****
+
+一個 deployment file 裡面 可能會寫多個 deployment + service
+
+
+
+
+目前在 k8s 那邊 k8s 執行多個專案的時候 有問題
+
+
