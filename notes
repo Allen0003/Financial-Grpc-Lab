@@ -360,7 +360,15 @@ kubectl logs -f -l app=grpc-server --max-log-requests=3
 
 
 
+k8s 執行多個專案的時候 pom 需要修正
 
-目前在 k8s 那邊 k8s 執行多個專案的時候 有問題
+grpc/pom.xml
+
+如果有 <classifier>exec</classifier> maven 會去 產出一個副檔名叫做 -exec.jar
+
+grpc-server/pom.xml
+
+包一層
+<pluginManagement>（外掛管理）
 
 
