@@ -354,8 +354,6 @@ kubectl logs -f -l app=grpc-server --max-log-requests=3
 
 
 
-****
-
 一個 deployment file 裡面 可能會寫多個 deployment + service
 
 
@@ -370,5 +368,16 @@ grpc-server/pom.xml
 
 包一層
 <pluginManagement>（外掛管理）
+
+
+
+增加 CommandLineRunner 在 java
+
+保證在 Spring Boot 100% 完全啟動、所有資源與依賴都就緒的最後一刻，才正式開啟 gRPC Port 9090
+
+
+然後使用 root權限 在 k8s 上面 才不會被權限擋掉
+
+
 
 
