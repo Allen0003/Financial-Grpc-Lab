@@ -380,4 +380,23 @@ grpc-server/pom.xml
 
 
 
+*******
+
+
+gRPC 是 l4 連線 hpa 會掛掉 不會自動 auto scaling
+
+
+把 client code 增加
+
+ManagedChannelBuilder.forTarget("dns:///grpc-server-headless:9090")
+    .defaultLoadBalancingPolicy("round_robin")
+
+dns:///（Headless Service）：K8s 的 Headless Service 不會給你一個統一的 L4 VIP，而是直接把後端 3 台 Server 的真實 Pod IP 全部打包塞給 Client
+
+
+
+
+
+
+
 
