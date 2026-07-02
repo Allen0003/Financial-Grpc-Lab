@@ -2,20 +2,19 @@ package com.example.grpc.server.service;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableAsync;
-import java.io.IOException;
 
 @SpringBootApplication
 @EnableAsync
-public class GrpcServerApplication {
+public class GrpcServerApplication implements CommandLineRunner {
 
     private final OrderServiceImpl orderService;
     private Server server;
-    
+
     public GrpcServerApplication(OrderServiceImpl orderService) {
         this.orderService = orderService;
     }
@@ -24,16 +23,17 @@ public class GrpcServerApplication {
         SpringApplication.run(GrpcServerApplication.class, args);
     }
 
-    @PostConstruct
-    public void startGrpcServer() throws IOException {
-        // 使用注入進來的 orderService 啟動服務
+    @Override
+    public void run(String... args) throws Exception {
+        // 保證在此時 Spring Boot 已經完全 Started 完畢
         this.server = ServerBuilder.forPort(9090)
                 .addService(orderService)
                 .build()
                 .start();
 
-        System.out.println("gRPC 伺服器】已於 Port 9090 順利啟動...");
+        System.out.println("[金融級微服務] gRPC 伺服器已於 Port 9090 完美就緒，開始接收連線...");
 
+        // 金融級防阻塞優化：讓主執行緒守候，直到服務被關閉
         Thread awaitThread = new Thread(() -> {
             try {
                 server.awaitTermination();
@@ -41,7 +41,7 @@ public class GrpcServerApplication {
                 Thread.currentThread().interrupt();
             }
         });
-        awaitThread.setDaemon(false);
+        awaitThread.setDaemon(false); // 必須是 Non-Daemon，防止 JVM 提早結束
         awaitThread.start();
     }
 

@@ -21,7 +21,8 @@ public class OrderClientService {
     @PostConstruct
     public void init() {
         // 1. 建立指向本地 9090 Port 的連線通道，usePlaintext 代表不使用 SSL 加密
-        this.channel = ManagedChannelBuilder.forAddress("localhost", 9090)
+        this.channel = ManagedChannelBuilder.forTarget("dns:///grpc-server-headless:9090")
+                .defaultLoadBalancingPolicy("round_robin") // 金融級負載平衡（輪詢機制）
                 .usePlaintext()
                 .build();
 

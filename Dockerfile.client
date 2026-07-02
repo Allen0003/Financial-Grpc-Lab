@@ -21,8 +21,6 @@ RUN mvn package -DskipTests -Dspring-boot.repackage.skip=false
 FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
-RUN useradd -m -u 1001 finance-user
-USER finance-user
 
 # 注意這裡的複製路徑：直接從子模組的 target 撈取 jar
 COPY --from=builder /workspace/grpc/grpc-client/target/grpc-client-1.0.0-SNAPSHOT.jar /app/grpc-client.jar
